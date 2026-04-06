@@ -157,6 +157,7 @@ export class Bridge {
         this.planning.activeSummary(),
         this.scheduler.activeSummary(),
         this.history.format(post.channel_id),
+        this.history.formatCrossChannel(post.channel_id),
       ].filter(Boolean).join('\n\n');
 
       let result = await invokeClaude({
@@ -195,12 +196,12 @@ export class Bridge {
 
       this.history.add(post.channel_id, {
         role: 'user', sender: event.sender_name,
-        content: cleanMessage, timestamp: post.create_at,
+        content: cleanMessage, timestamp: post.create_at, platform: 'mattermost',
       });
 
       this.history.add(post.channel_id, {
         role: 'assistant', sender: this.mm.botUsername,
-        content: result.output.slice(0, 2000), timestamp: Date.now(),
+        content: result.output.slice(0, 2000), timestamp: Date.now(), platform: 'mattermost',
       });
 
       const chunks = splitMessage(result.output, 15000);

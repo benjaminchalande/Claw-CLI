@@ -33,9 +33,11 @@ export function initBridgeServices(): BridgeServices {
   migrate(db);
 
   // Additional migrations (idempotentes — CREATE TABLE IF NOT EXISTS)
-  for (const file of ['003_history.sql', '004_epics_tasks.sql', '005_scheduler.sql']) {
-    const sql = readFileSync(join(__dirname, '..', '..', 'migrations', file), 'utf-8');
-    db.exec(sql);
+  for (const file of ['003_history.sql', '004_epics_tasks.sql', '005_scheduler.sql', '006_platform.sql']) {
+    try {
+      const sql = readFileSync(join(__dirname, '..', '..', 'migrations', file), 'utf-8');
+      db.exec(sql);
+    } catch { /* already applied */ }
   }
 
   const memory = new MemoryStore(db);

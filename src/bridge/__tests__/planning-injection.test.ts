@@ -39,6 +39,7 @@ vi.mock('../init.js', () => ({
     history: {
       add: vi.fn(),
       format: vi.fn().mockReturnValue(''),
+      formatCrossChannel: vi.fn().mockReturnValue(''),
     },
     systemPromptFile: '/tmp/system-prompt.md',
   }),

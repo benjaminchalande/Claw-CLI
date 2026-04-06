@@ -73,7 +73,7 @@ export class WhatsAppBridge {
       const timestamp = (msg.messageTimestamp ?? 0) * 1000;
       const fromMe: boolean = msg.key?.fromMe ?? false;
 
-      this.services.history.add(jid, {
+      this.services.history.add(jid, { platform: 'whatsapp',
         role: fromMe ? 'assistant' : 'user',
         sender: fromMe ? 'claw-cli' : (msg.pushName || 'user'),
         content: text,
@@ -121,7 +121,7 @@ export class WhatsAppBridge {
       console.log(`[wa-bridge] "${msg.text.slice(0, 80)}" from ${msg.pushName}`);
 
       // Record in history
-      this.services.history.add(msg.jid, {
+      this.services.history.add(msg.jid, { platform: 'whatsapp',
         role: 'user',
         sender: msg.pushName || 'user',
         content: msg.text,
@@ -138,6 +138,7 @@ export class WhatsAppBridge {
         }),
         this.services.planning.activeSummary(),
         this.services.history.format(msg.jid),
+        this.services.history.formatCrossChannel(msg.jid),
       ].filter(Boolean).join('\n\n');
 
       // Invoke Claude
@@ -173,7 +174,7 @@ export class WhatsAppBridge {
       }
 
       // Record response
-      this.services.history.add(msg.jid, {
+      this.services.history.add(msg.jid, { platform: 'whatsapp',
         role: 'assistant',
         sender: 'claw-cli',
         content: result.output.slice(0, 2000),

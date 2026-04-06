@@ -59,9 +59,20 @@ Edit `src/bridge/prompts/soul.md` — in the loyalty line, replace "Ton owner" w
 
 Edit `src/bridge/prompts/personality.md` — replace "ton owner" with their name in the tone line.
 
-## Step 5 — Initialize
+## Step 5 — Project context
 
-Run these commands:
+Ask: **What project are you working on? Describe it in a few sentences.** (what it does, what tech, what goals)
+
+Save their answer to memory:
+```bash
+npx tsx src/memory/cli.ts write --zone internal --name "project" --content "<their description>" --importance 3
+```
+
+This will be injected into every conversation so the agent always knows the context.
+
+## Step 6 — Initialize
+
+Run the migrations and start:
 ```bash
 npm install
 npm run bridge  # or npm run bridge:wa

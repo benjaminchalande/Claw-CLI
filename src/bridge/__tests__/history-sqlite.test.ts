@@ -7,12 +7,14 @@ import { ConversationHistory } from '../history.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const MIGRATION = readFileSync(join(__dirname, '..', '..', '..', 'migrations', '003_history.sql'), 'utf-8');
+const MIGRATION_PLATFORM = readFileSync(join(__dirname, '..', '..', '..', 'migrations', '006_platform.sql'), 'utf-8');
 
 let db: Database.Database;
 
 beforeEach(() => {
   db = new Database(':memory:');
   db.exec(MIGRATION);
+  db.exec(MIGRATION_PLATFORM);
 });
 
 afterEach(() => db.close());
