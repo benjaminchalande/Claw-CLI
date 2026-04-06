@@ -1,0 +1,40 @@
+{
+  "name": "claw-cli",
+  "version": "0.1.0",
+  "description": "Claw CLI — Agent autonome basé sur Claude Code",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "bridge": "npx tsx src/bridge/index.ts",
+    "bridge:wa": "npx tsx src/bridges/whatsapp/index.ts",
+    "memory": "npx tsx src/memory/cli.ts",
+    "planning": "npx tsx src/planning/cli.ts",
+    "scheduler": "npx tsx src/scheduler/cli.ts",
+    "test": "node --experimental-vm-modules node_modules/.bin/vitest run",
+    "test:watch": "node --experimental-vm-modules node_modules/.bin/vitest"
+  },
+  "bin": {
+    "memory": "./dist/memory/cli.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.21",
+    "better-sqlite3": "^12.8.0",
+    "cron-parser": "^5.5.0",
+    "dotenv": "^17.4.0",
+    "pino": "^10.3.1",
+    "qrcode": "^1.5.4",
+    "qrcode-terminal": "^0.12.0",
+    "ws": "^8.20.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^25.5.2",
+    "@types/ws": "^8.18.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.2"
+  }
+}

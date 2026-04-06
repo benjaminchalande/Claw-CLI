@@ -1,0 +1,17 @@
+[Unit]
+Description=Claw CLI WhatsApp Bridge
+After=network.target
+
+[Service]
+Type=simple
+User=%i
+WorkingDirectory=/opt/claw-cli
+EnvironmentFile=/opt/claw-cli/.env
+ExecStart=/usr/bin/npx tsx src/bridges/whatsapp/index.ts
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

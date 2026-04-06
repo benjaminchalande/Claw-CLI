@@ -1,0 +1,12 @@
+[Unit]
+Description=Claw CLI Scheduler — exécute les jobs planifiés dus
+After=network.target
+
+[Service]
+Type=oneshot
+User=%i
+WorkingDirectory=/opt/claw-cli
+EnvironmentFile=/opt/claw-cli/.env
+ExecStart=/usr/bin/npx tsx src/scheduler/cli.ts run
+StandardOutput=journal
+StandardError=journal
