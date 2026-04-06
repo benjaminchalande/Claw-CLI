@@ -145,6 +145,17 @@ export class MattermostClient {
     });
   }
 
+  async updatePost(postId: string, message: string): Promise<void> {
+    await this.api(`/api/v4/posts/${postId}`, {
+      method: 'PUT',
+      body: { id: postId, message },
+    });
+  }
+
+  async deletePost(postId: string): Promise<void> {
+    await this.api(`/api/v4/posts/${postId}`, { method: 'DELETE' });
+  }
+
   async addReaction(postId: string, emojiName: string): Promise<void> {
     await this.api('/api/v4/reactions', {
       method: 'POST',

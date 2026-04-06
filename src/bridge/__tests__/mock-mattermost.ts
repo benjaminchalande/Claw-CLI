@@ -113,6 +113,24 @@ export class MockMattermost {
         return;
       }
 
+      // PUT /api/v4/posts/:id (updatePost)
+      if (req.method === 'PUT' && path.startsWith('/api/v4/posts/')) {
+        const data = JSON.parse(body);
+        // Update the message in postedMessages
+        const existing = this.postedMessages.find(p => p.message === '🧠 ...');
+        if (existing) existing.message = data.message;
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(data));
+        return;
+      }
+
+      // DELETE /api/v4/posts/:id
+      if (req.method === 'DELETE' && path.startsWith('/api/v4/posts/')) {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end('{}');
+        return;
+      }
+
       // POST /api/v4/reactions
       if (req.method === 'POST' && path === '/api/v4/reactions') {
         const data = JSON.parse(body);

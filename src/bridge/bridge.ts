@@ -123,16 +123,19 @@ export class Bridge {
     const { post } = event;
     this.activeCount++;
 
+    // Post a visible "thinking" message, then replace it with the real response
+    let thinkingPostId: string | null = null;
+
     this.mm.sendTyping(post.channel_id);
     const typingInterval = setInterval(() => this.mm.sendTyping(post.channel_id), 3000);
 
     try {
-      await this.mm.addReaction(post.id, 'eyes').catch(() => {});
+      const thinkingPost = await this.mm.createPost(post.channel_id, '🧠 ...').catch(() => null);
+      thinkingPostId = thinkingPost?.id ?? null;
 
       const cleanMessage = post.message.replace(this.mentionRegex(), '').trim();
       if (!cleanMessage) {
-        await this.mm.removeReaction(post.id, 'eyes').catch(() => {});
-        await this.mm.createPost(post.channel_id, 'Oui ?');
+        if (thinkingPostId) await this.mm.updatePost(thinkingPostId, 'Oui ?').catch(() => {});
         return;
       }
 
@@ -141,9 +144,8 @@ export class Bridge {
       // Routing direct des commandes (!schedule, !remind) sans passer par le LLM
       const scheduleResult = await this.handleDirectCommand(cleanMessage, post.channel_id);
       if (scheduleResult !== null) {
-        await this.mm.removeReaction(post.id, 'eyes').catch(() => {});
-        await this.mm.addReaction(post.id, 'white_check_mark').catch(() => {});
-        await this.mm.createPost(post.channel_id, scheduleResult);
+        if (thinkingPostId) await this.mm.updatePost(thinkingPostId, scheduleResult).catch(() => {});
+        else await this.mm.createPost(post.channel_id, scheduleResult);
         return;
       }
 
@@ -184,15 +186,12 @@ export class Bridge {
         });
       }
 
-      await this.mm.removeReaction(post.id, 'eyes').catch(() => {});
 
       if (!result.output) {
         console.warn(`[bridge] No output (exit=${result.exitCode})`);
-        await this.mm.addReaction(post.id, 'warning').catch(() => {});
+        if (thinkingPostId) await this.mm.updatePost(thinkingPostId, '⚠️ Pas de réponse — reformule ou réessaie.').catch(() => {});
         return;
       }
-
-      await this.mm.addReaction(post.id, 'white_check_mark').catch(() => {});
 
       this.history.add(post.channel_id, {
         role: 'user', sender: event.sender_name,
@@ -204,16 +203,25 @@ export class Bridge {
         content: result.output.slice(0, 2000), timestamp: Date.now(), platform: 'mattermost',
       });
 
+      // Replace the thinking message with the first chunk, post the rest as new messages
       const chunks = splitMessage(result.output, 15000);
-      for (const chunk of chunks) {
-        await this.mm.createPost(post.channel_id, chunk);
+      if (thinkingPostId && chunks.length > 0) {
+        await this.mm.updatePost(thinkingPostId, chunks[0]).catch(() => {});
+        for (let i = 1; i < chunks.length; i++) {
+          await this.mm.createPost(post.channel_id, chunks[i]);
+        }
+      } else {
+        // Fallback: delete thinking, post normally
+        if (thinkingPostId) await this.mm.deletePost(thinkingPostId).catch(() => {});
+        for (const chunk of chunks) {
+          await this.mm.createPost(post.channel_id, chunk);
+        }
       }
 
       console.log(`[bridge] Replied (${result.output.length} chars)`);
     } catch (err) {
       console.error('[bridge] Error:', err);
-      await this.mm.removeReaction(post.id, 'eyes').catch(() => {});
-      await this.mm.addReaction(post.id, 'x').catch(() => {});
+      if (thinkingPostId) await this.mm.updatePost(thinkingPostId, '❌ Erreur interne').catch(() => {});
     } finally {
       clearInterval(typingInterval);
       this.activeCount--;
