@@ -109,6 +109,7 @@ async function main() {
     claudePath: process.env.CLAUDE_PATH ?? 'claude',
     claudeCwd: process.env.CLAUDE_CWD ?? process.cwd(),
     claudeTimeout: parseInt(process.env.CLAUDE_TIMEOUT ?? '120000'),
+    dataDir: DATA_DIR,
   });
 
   // Dynamic import of Baileys
@@ -179,6 +180,12 @@ async function main() {
           bridge.addOwnerJid(sock.user.id);
           const bare = sock.user.id.replace(/:\d+@/, '@');
           bridge.addOwnerJid(bare);
+        }
+        // Register LID (Linked Identity) for self-chat
+        if (sock.user?.lid) {
+          bridge.addOwnerJid(sock.user.lid);
+          const bareLid = sock.user.lid.replace(/:\d+@/, '@');
+          bridge.addOwnerJid(bareLid);
         }
         try { await sock.sendPresenceUpdate('available'); } catch {}
         bridge.start(sock);

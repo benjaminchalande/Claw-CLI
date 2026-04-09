@@ -20,6 +20,7 @@ beforeAll(() => {
     claudePath: 'claude',
     claudeCwd: '/tmp',
     claudeTimeout: 10000,
+    dataDir: '/tmp/claw-cli-test',
   });
   bridge.start(mock);
 });

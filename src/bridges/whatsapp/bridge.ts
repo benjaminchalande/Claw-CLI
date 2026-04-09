@@ -6,12 +6,14 @@ import { WhatsAppClient, type WASocket, type WAMessage } from './client.js';
 import { invokeClaude } from '../../bridge/claude.js';
 import { buildDynamicContext } from '../../bridge/prompt-builder.js';
 import { initBridgeServices, type BridgeServices } from '../../bridge/init.js';
+import { ChannelManager } from './channel-manager.js';
 
 export interface WABridgeConfig {
   ownerPhone: string;   // e.g. '33612345678'
   claudePath: string;
   claudeCwd: string;
   claudeTimeout: number;
+  dataDir: string;      // path to data/ directory for active-channels.json
 }
 
 export class WhatsAppBridge {
@@ -21,14 +23,15 @@ export class WhatsAppBridge {
   private activeCount = 0;
   private processedIds = new Set<string>();
   private ownerJid: string;
-  /** Additional JIDs that belong to the owner (LID format for self-chat). */
   private ownerJids = new Set<string>();
+  private channels: ChannelManager;
 
   constructor(config: WABridgeConfig) {
     this.config = config;
     this.ownerJid = `${config.ownerPhone}@s.whatsapp.net`;
     this.ownerJids.add(this.ownerJid);
     this.services = initBridgeServices();
+    this.channels = new ChannelManager(config.dataDir);
   }
 
   /** Register an additional JID as belonging to the owner (e.g. LID from sock.user). */
@@ -40,9 +43,7 @@ export class WhatsAppBridge {
   }
 
   private isOwner(jid: string): boolean {
-    // Accept known JIDs or any LID (WhatsApp Linked Identity for self-chat)
-    // LID format: numbers@lid — used when messaging yourself
-    return this.ownerJids.has(jid) || jid.endsWith('@lid');
+    return this.ownerJids.has(jid);
   }
 
   /** Attach a Baileys socket (real or mock) and start listening. */
@@ -90,9 +91,9 @@ export class WhatsAppBridge {
     // Ignore groups
     if (msg.isGroup) return;
 
-    // Hard block: owner only (accept both @s.whatsapp.net and @lid formats)
-    if (!this.isOwner(msg.jid)) {
-      console.log(`[wa-bridge] Blocked non-owner ${msg.jid}`);
+    // Allow owner + active channels
+    if (!this.isOwner(msg.jid) && !this.channels.isAllowed(msg.jid)) {
+      console.log(`[wa-bridge] Blocked ${msg.jid}`);
       return;
     }
 
